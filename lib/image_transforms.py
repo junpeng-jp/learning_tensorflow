@@ -67,5 +67,5 @@ def stateless_random_invert(images, seed):
         images = images * prob * -1. + prob
         images.set_shape(shape)
 
-    return image
+    return images
 

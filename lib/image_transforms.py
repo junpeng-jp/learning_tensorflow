@@ -40,7 +40,7 @@ def stateless_random_rotate(images, max_degree, seed, **kwargs):
 
 
 @dispatch.add_dispatch_support
-def stateless_random_invert(images, seed, **kwargs):
+def stateless_random_invert(images, seed):
     with ops.name_scope(None, "random_invert", [images]) as scope:
         images = ops.convert_to_tensor(images, name='image')
         shape = images.get_shape()
@@ -52,12 +52,12 @@ def stateless_random_invert(images, seed, **kwargs):
 
         if rank == 2 or rank == 3:
             prob = stateless_random_ops.stateless_random_uniform(
-            shape=[], minval = -max_degree, maxval = max_degree, seed = seed)
+            shape=[], minval = 0., maxval = 1., seed = seed)
 
         elif rank == 4:
             batch_size = array_ops.shape(images)[0]
             prob = stateless_random_ops.stateless_random_uniform(
-                shape=[batch_size], minval = -max_degree, maxval = max_degree, seed = seed)
+                shape=[batch_size], minval = 0., maxval = 1., seed = seed)
         else:
             raise ValueError(
                 '\'image\' (shape %s) must have either 2 (HW), 3 (HWC) or 4 (NHWC) dimensions.' % shape)

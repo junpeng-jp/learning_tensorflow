@@ -63,8 +63,9 @@ def stateless_random_invert(images, seed):
                 '\'image\' (shape %s) must have either 2 (HW), 3 (HWC) or 4 (NHWC) dimensions.' % shape)
 
         prob = tf.cast(tf.math.greater(prob, 0.5), tf.float32)
+        prob = tf.reshape(prob, (batch_size, 1, 1, 1))
 
-        images = images * prob * -1. + prob
+        images = images * tf.math.pow(-1., prob) + prob
         images.set_shape(shape)
 
     return images

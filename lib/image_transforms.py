@@ -9,15 +9,15 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import stateless_random_ops
 
 @dispatch.add_dispatch_support
-def stateless_random_rotate(image, max_degree, seed, **kwargs):
+def stateless_random_rotate(images, max_degree, seed, **kwargs):
     if max_degree < 0:
         raise ValueError('max_degree must be non-negative.')
 
-    image = ops.convert_to_tensor(image, name='image')
-    shape = image.get_shape()
+    images = ops.convert_to_tensor(images, name='image')
+    shape = images.get_shape()
 
     if shape.ndims is None:
-        rank = array_ops.rank(image)
+        rank = array_ops.rank(images)
     else:
         rank = shape.ndims
 
@@ -26,14 +26,46 @@ def stateless_random_rotate(image, max_degree, seed, **kwargs):
         shape=[], minval = -max_degree, maxval = max_degree, seed = seed)
 
     elif rank == 4:
-        batch_size = array_ops.shape(image)[0]
+        batch_size = array_ops.shape(images)[0]
         degrees = stateless_random_ops.stateless_random_uniform(
             shape=[batch_size], minval = -max_degree, maxval = max_degree, seed = seed)
     else:
-      raise ValueError(
-          '\'image\' (shape %s) must have either 2 (HW), 3 (HWC) or 4 (NHWC) dimensions.' % shape)
+        raise ValueError(
+            '\'image\' (shape %s) must have either 2 (HW), 3 (HWC) or 4 (NHWC) dimensions.' % shape)
 
-    image = tfa.image.rotate(image, degrees, **kwargs)
-    image.set_shape(shape)
+    images = tfa.image.rotate(images, degrees, **kwargs)
+    images.set_shape(shape)
+
+    return images
+
+
+@dispatch.add_dispatch_support
+def stateless_random_invert(images, seed, **kwargs):
+    with ops.name_scope(None, "random_invert", [images]) as scope:
+        images = ops.convert_to_tensor(images, name='image')
+        shape = images.get_shape()
+
+        if shape.ndims is None:
+            rank = array_ops.rank(images)
+        else:
+            rank = shape.ndims
+
+        if rank == 2 or rank == 3:
+            prob = stateless_random_ops.stateless_random_uniform(
+            shape=[], minval = -max_degree, maxval = max_degree, seed = seed)
+
+        elif rank == 4:
+            batch_size = array_ops.shape(images)[0]
+            prob = stateless_random_ops.stateless_random_uniform(
+                shape=[batch_size], minval = -max_degree, maxval = max_degree, seed = seed)
+        else:
+            raise ValueError(
+                '\'image\' (shape %s) must have either 2 (HW), 3 (HWC) or 4 (NHWC) dimensions.' % shape)
+
+        prob = tf.math.greater(prob, 0.5)
+
+        images = images * prob * -1. + 1.
+        images.set_shape(shape)
 
     return image
+
